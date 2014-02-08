@@ -1,0 +1,5 @@
+---
+- hosts: localhost
+  tasks:
+    - action: shell /usr/bin/uptime
+
