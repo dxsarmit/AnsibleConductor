@@ -1,19 +1,32 @@
 #!/Users/jgoodwin/git/jwg.NorseFire/bin/python
 
 from flask import Flask
+import flask
 from flask import request
 from flask import jsonify
+from flask import Response
 import json
 import sys
 import imp
-sys.path.append('/Users/jgoodwin/git/jwg.ansible/lib/')
-AP = imp.load_source('ansible-playbook','/Users/jgoodwin/git/jwg.ansible/bin/ansible_playbook')
-import ansible
 import subprocess
+import os
+import time
 
-# sys.path.append('/Users/jgoodwin/git/jwg.ansible/bin/')
-# print sys.path
-# import ansible_playbook
+
+'''
+
+Need to create a class.
+Give class info from posted blob.
+Class then has a .run()
+Need to keep track of current running state in the instanciated class
+Then save to disk once its done
+
+'''
+
+os.environ['PATH'] ='/Users/jgoodwin/git/jwg.ansible/bin:/Users/jgoodwin/git/jwg.NorseFire/bin:/Users/jgoodwin/.bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin'
+os.environ['PYTHONPATH'] ='/Users/jgoodwin/git/jwg.ansible/lib:'
+os.environ['ANSIBLE_LIBRARY'] = '/Users/jgoodwin/git/jwg.ansible/library'
+os.environ['MANPATH'] = '/Users/jgoodwin/git/jwg.ansible/docs/man:'
 
 
 app=Flask(__name__)
@@ -28,19 +41,24 @@ accepted_keys = [ "path",
         ]
 
 flag_map = { "hosts" : "-i",
-             "extra_vars" : "--extra-vars",
-             "tags" : "--tags",
-             "skip_tags" : "--skip-tags",
-             "syntax_check" : "--syntax-check",
-             "start_at" : "--start-at"
-             }
+        "extra_vars" : "--extra-vars",
+        "tags" : "--tags",
+        "skip_tags" : "--skip-tags",
+        "syntax_check" : "--syntax-check",
+        "start_at" : "--start-at"
+        }
+
+playbook_path  = '/Users/jgoodwin/git/jwg.NorseFire/app/ansible/bin/ansible-playbook'
 
 def run(blob):
-    argstring = json_to_argstring(blob)
-    out = AP.main(argstring)
-    blob['out'] = out
-    return jsonify(blob)
+    '''
+    Here we will subprocess.Popen and such
+    '''
 
+'''
+Converts a posted (safe) blob into an argstring for execution against
+the ansible-playbook binary.
+'''
 def json_to_argstring(blob):
     argstring = []
     for key in accepted_keys:
@@ -52,7 +70,7 @@ def json_to_argstring(blob):
                 prefix = flag_map[key]
                 argstring.append(prefix)
                 argstring.append(val)
-    argstring.append('--syntax-check')
+    # argstring.append('--syntax-check')
     return argstring
 
 @app.route('/run_playbook', methods=['POST'])
@@ -64,7 +82,7 @@ def run_playbook():
     "extra_vars" : [ "key=val", "key2=val2" ],
     "tags" : [ "tags", "list" ]
     "skip_tags" : ["also", "a", "list"],
-    "syntax_check" : boolean,
+    # "syntax_check" : boolean,
     "step" : "NOT SUPPORTED"
     "start_at" : "task_name" }
     '''
@@ -79,13 +97,32 @@ def run_playbook():
             safe_blob = False
 
     return_obj = {}
-    return_obj['blob']=blob
+    return_obj['blob']= blob
     if safe_blob:
+        argstring = json_to_argstring(blob)
         return_obj['state']='started'
-        run(blob)
-        return jsonify(return_obj)
+        '''
+        Here goes the streaming output part
+        '''
+        def runner():
+            proc = subprocess.Popen(
+                [playbook_path]+ argstring,
+                    # shell = True, # Paul says no; no bash for you
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                   bufsize=-1
+            )
+
+            for line in iter(proc.stdout.readline, ''): # Paul says yes
+                yield line.rstrip()
+
+        return flask.Response(runner(), mimetype='text/html')
+
+
+
+
     else:
-        return_obj['state']='failed'
+        return_obj['state']='incorrect blob format'
         return jsonify(return_obj)
 
 
