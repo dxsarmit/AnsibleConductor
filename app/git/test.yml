@@ -1,5 +1,6 @@
 ---
 - hosts: localhost
   tasks:
-    - action: shell /usr/bin/uptime
+    - action: shell echo 'ansible echo'
+    - action: shell sleep 10
 
