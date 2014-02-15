@@ -2,5 +2,21 @@
 - hosts: localhost
   tasks:
     - action: shell echo 'ansible echo'
-    - action: shell sleep 10
+    - action: shell sleep 1
+    - action: shell echo 'ansible echo'
+    - action: shell sleep 1
+    - action: shell echo 'ansible echo'
+    - action: shell sleep 1
+    - action: shell echo 'ansible echo'
+    - action: shell sleep 1
+    - action: shell echo 'ansible echo'
+    - action: shell sleep 1
+    - action: shell echo 'ansible echo'
+    - action: shell sleep 1
+    - action: shell echo 'ansible echo'
+    - action: shell sleep 1
+    - action: shell echo 'ansible echo'
+    - action: shell sleep 1
+    - action: shell echo 'ansible echo'
+    - action: shell sleep 1
 
