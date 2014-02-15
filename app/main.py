@@ -1,4 +1,4 @@
-#!/Users/jgoodwin/git/jwg.NorseFire/bin/python
+#!/Users/jgoodwin/git/jwg.Conductor/bin/python
 import flask, json, sys, subprocess, time, md5, os
 from flask import Flask
 from flask import request
@@ -88,13 +88,13 @@ def run_playbook():
         argarray = json_to_argarray(blob)
         response['state']='started'
         response['request_id']=runid
-        runarray = [ 'python', './NorseFire.py' ]
+        runarray = [ 'python', './Conductor.py' ]
         runarray = runarray + [ runid ] + argarray
         print 'Running: ' + str(argarray)
         subprocess.Popen(runarray)
         # TODO: we need to set the ID of the run before we pass it off to the runner
               # because we need to know how to look up what we were running... :/
-        # TODO: Run ansible using NorseFire.py
+        # TODO: Run ansible using Conductor.py
               # subprocess.popen(stuff)
         return jsonify(response)
     else:
@@ -106,7 +106,7 @@ def run_status():
     blob = json.loads(request.form['data'])
     response = {}
     runid = blob['id']
-    path = './NorseFireRuns/' + runid
+    path = './ConductorRuns/' + runid
     print path
     if not os.path.exists(path):
         response['state'] = 'Run Not Found'

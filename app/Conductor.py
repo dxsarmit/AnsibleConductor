@@ -1,4 +1,4 @@
-#!/Users/jgoodwin/git/jwg.NorseFire/bin/python
+#!/Users/jgoodwin/git/jwg.Conductor/bin/python
 import json, sys, subprocess, os, time, md5
 '''
 THIS IS DOCUMENTATION
@@ -12,19 +12,15 @@ sys.argv = [ 0:0 BinaryName,
 '''
 # TODO: Figure out how much of this we really need
       # Adding to our environment the required ansible path stuff
-os.environ['PATH'] ='/Users/jgoodwin/git/jwg.ansible/bin:/Users/jgoodwin/git/jwg.NorseFire/bin:/Users/jgoodwin/.bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin'
-os.environ['PYTHONPATH'] ='/Users/jgoodwin/git/jwg.ansible/lib:'
-os.environ['ANSIBLE_LIBRARY'] = '/Users/jgoodwin/git/jwg.ansible/library'
-os.environ['MANPATH'] = '/Users/jgoodwin/git/jwg.ansible/docs/man:'
+os.environ['PYTHONPATH'] = './ansible/lib:'
+os.environ['ANSIBLE_LIBRARY'] = './ansible/library'
 # This is mandatory
 os.environ['PYTHONUNBUFFERED'] = 'True'
 # The path to our binary for ansible
-playbook_path  = '/Users/jgoodwin/git/jwg.NorseFire/app/ansible/bin/ansible-playbook'
+playbookpath  = './ansible/bin/ansible-playbook'
+runsdir= './ConductorRuns'
 
-
-directory = './NorseFireRuns'
-
-def main(runid,ansibleargs):
+def main(runid, ansibleargs):
   print '-'*100
   print 'Run Id:'
   print runid
@@ -49,15 +45,15 @@ class playbook_request():
               # id = md5.new(str(time.time())).hexdigest()
         self.id = runid
         self.args = args
-        if not os.path.exists(directory):
-          os.makedirs(directory)
-          if not os.path.exists(directory+'/'+id):
-            os.makedirs(directory+'/'+id)
+        if not os.path.exists(runsdir):
+          os.makedirs(runsdir)
+          if not os.path.exists(runsdir+'/'+id):
+            os.makedirs(runsdir+'/'+id)
 
     def run(self):
-      f = open(directory+'/'+self.id, 'a+')
+      f = open(runsdir+'/'+self.id, 'w+')
       proc = subprocess.Popen(
-              [playbook_path] + self.args,
+              [playbookpath] + self.args,
               stdout=subprocess.PIPE,
               stderr=subprocess.STDOUT
               )
