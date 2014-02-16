@@ -1,5 +1,6 @@
 #!/Users/jgoodwin/git/jwg.Conductor/bin/python
-import flask, json, sys, subprocess, time, md5, os
+import flask, json, sys, subprocess, time, md5, os, datetime
+from datetime import date
 from flask import Flask
 from flask import request
 from flask import jsonify
@@ -84,18 +85,20 @@ def run_playbook():
     # TODO: Need to find a way to do 400 (bad request)
     # TODO: make this a try block
     if check_blob(blob):
-        runid = 'foo'
-        argarray = json_to_argarray(blob)
-        response['state']='started'
-        response['request_id']=runid
+        timestamp    = datetime.datetime.fromtimestamp(int(time.time())).strftime('%Y%m%d_%H%M%S')
+        playbookname = blob['path'].split('/')[-1].split('.')[0]
+        runid        = playbookname + timestamp
+        argarray     = json_to_argarray(blob)
+
+        response['state']      = 'started'
+        response['request_id'] = runid
+
         runarray = [ 'python', './Conductor.py' ]
         runarray = runarray + [ runid ] + argarray
+
         print 'Running: ' + str(argarray)
+        # The magic
         subprocess.Popen(runarray)
-        # TODO: we need to set the ID of the run before we pass it off to the runner
-              # because we need to know how to look up what we were running... :/
-        # TODO: Run ansible using Conductor.py
-              # subprocess.popen(stuff)
         return jsonify(response)
     else:
         response['state']='incorrect blob format'
@@ -120,7 +123,6 @@ def run_status():
             response['output'] = response['output']+[ line ]
         return jsonify(response)
 
-# TODO: Then save to disk once its done
 if __name__ == '__main__':
     app.debug = True
     app.run(port=5001)

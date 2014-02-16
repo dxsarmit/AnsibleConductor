@@ -21,12 +21,6 @@ playbookpath  = './ansible/bin/ansible-playbook'
 runsdir= './ConductorRuns'
 
 def main(runid, ansibleargs):
-  print '-'*100
-  print 'Run Id:'
-  print runid
-  print 'Ansible args:'
-  print ansibleargs
-  print '-'*100
   pb = playbook_request(runid, ansibleargs)
   pb.run()
 
@@ -38,13 +32,14 @@ playbook_request.run(self):
 Creates a subprocess that runs the requestd ansible command and writes its output to a file
 '''
 
+# Function: writes the header to our run files
+          # expects an open file handle
+
 class playbook_request():
     def __init__(self, id, args):
-        # TODO: pass along the run id; maybe just date+time+playbook
-              # or some unique counter for each playbook (more annoying)
-              # id = md5.new(str(time.time())).hexdigest()
         self.id = runid
         self.args = args
+        self.starttime = time.time()
         if not os.path.exists(runsdir):
           os.makedirs(runsdir)
           if not os.path.exists(runsdir+'/'+id):
@@ -52,6 +47,7 @@ class playbook_request():
 
     def run(self):
       f = open(runsdir+'/'+self.id, 'w+')
+      self.write_header(f)
       proc = subprocess.Popen(
               [playbookpath] + self.args,
               stdout=subprocess.PIPE,
@@ -61,7 +57,24 @@ class playbook_request():
       for line in iter(proc.stdout.readline, ''):
         f.write(line)
         f.flush()
+      self.write_footer(f)
 
+    def write_header(self, F):
+        bar = '-'*100+'\n'
+        F.write(bar)
+        F.write('Run Id: ' + self.id + '\n')
+        F.write('Ansible args: ' + str(self.args) + '\n')
+        F.write('Start Time: ' + str(self.starttime) + '\n')
+        F.write(bar)
+    def write_footer(self, F):
+        finishtime = time.time()
+        bar = '-'*100+'\n'
+        F.write(bar)
+        F.write('Run Id: ' + self.id + '\n')
+        F.write('Ansible args: ' + str(self.args) + '\n')
+        F.write('Stop Time: ' + str(finishtime) + '\n')
+        F.write('Seconds Taken: ' + str(finishtime - self.starttime) + '\n')
+        F.write(bar)
 
 if __name__ == '__main__':
     runid = sys.argv[1]
