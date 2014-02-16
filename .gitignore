@@ -1,0 +1,9 @@
+# This is all that virtualenv crap
+.Python
+bin/
+include/
+lib/
+# This is where the run files will go
+app/ConductorRuns
+# This is a where ansible goes...
+app/ansible
